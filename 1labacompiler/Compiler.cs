@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Net.WebRequestMethods;
+using File = System.IO.File;
 
 namespace _1labacompiler
 {
@@ -226,6 +228,58 @@ namespace _1labacompiler
                 MessageBox.Show($"Ошибка при сохранении файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        private void richTextBox_DragDrop(object sender, DragEventArgs e)
+        {
+            // Получение списка файлов, перетаскиваемых на элемент управления 
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            // Обработка каждого файла 
+            foreach (string file in files)
+            {
+                using (StreamReader sr = new StreamReader(file))
+                {
+                    string line; richTextBox1.Clear();
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        richTextBox1.AppendText(line);
+                    }
+                }
+            }
+        }
+        private void richTextBox_DragEnter(object sender, DragEventArgs e)
+        {
+            // Проверка, что перетаскивается файл             if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+        }
 
-        
+        private void richTextBox1_TextChanged_1(object sender, EventArgs e)
+        {
+            string[] keywords = { "if", "else", "while", "for", "switch", "case", "break", "default", "return" }; int start = richTextBox1.SelectionStart;
+            foreach (string keyword in keywords)
+            {
+                int index = 0; while (index < richTextBox1.Text.Length)
+                {
+                    int startIndex = richTextBox1.Find(keyword, index, RichTextBoxFinds.WholeWord);
+                    if (startIndex == -1)
+                    {
+                        break;
+                    }
+                    richTextBox1.SelectionStart = startIndex; richTextBox1.SelectionLength = keyword.Length;
+                    richTextBox1.SelectionColor = Color.Blue; richTextBox1.SelectionFont = new Font(richTextBox1.Font, FontStyle.Bold);
+                    index = startIndex + keyword.Length;
+                }
+            }
+            richTextBox1.SelectionStart = start;
+            richTextBox1.SelectionColor = Color.Black;
+        }
+
+        private void Start_ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            richTextBox2.Clear();
+            LexicalAnalyzer lx = new LexicalAnalyzer();
+            lx.Analyze(richTextBox1.Text);
+            lx.DisplayResults(richTextBox2);
+            
+        }
     } }
